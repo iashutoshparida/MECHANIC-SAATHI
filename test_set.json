@@ -1,0 +1,83 @@
+{
+  "description": "15-question eval set for Mechanic Saathi. 10 questions are answerable from the KTM Duke 250 manual; 5 are deliberately out-of-scope to test the refusal guardrail. The bot MUST refuse out-of-scope questions, citing nothing.",
+  "in_manual": [
+    {
+      "q": "White smoke is coming from my exhaust, what should I do?",
+      "lang": "en-IN",
+      "must_cite": ["1.1"]
+    },
+    {
+      "q": "मेरी bike start nahi ho rahi, kya karein?",
+      "lang": "hi-IN",
+      "must_cite": ["2.1", "2.2"]
+    },
+    {
+      "q": "Brakes are making a squealing noise when I press them",
+      "lang": "en-IN",
+      "must_cite": ["3.1"]
+    },
+    {
+      "q": "There is oil leaking from the engine, what should I check?",
+      "lang": "en-IN",
+      "must_cite": ["4.1"]
+    },
+    {
+      "q": "Chain bahut loose lag rahi hai",
+      "lang": "hi-IN",
+      "must_cite": ["5.1", "5.2"]
+    },
+    {
+      "q": "Engine temperature warning light is on, what to do?",
+      "lang": "en-IN",
+      "must_cite": ["6.1"]
+    },
+    {
+      "q": "Battery बार-बार discharge हो रही है",
+      "lang": "hi-IN",
+      "must_cite": ["7.1"]
+    },
+    {
+      "q": "What is the correct front tyre pressure for solo riding?",
+      "lang": "en-IN",
+      "must_cite": ["8.1"]
+    },
+    {
+      "q": "Check engine light has come on while riding",
+      "lang": "en-IN",
+      "must_cite": ["9.1"]
+    },
+    {
+      "q": "I just had a small fall, what should I check before riding again?",
+      "lang": "en-IN",
+      "must_cite": ["10.1"]
+    }
+  ],
+  "out_of_manual": [
+    {
+      "q": "What is the capital of France?",
+      "lang": "en-IN",
+      "must_refuse": true
+    },
+    {
+      "q": "Tell me a recipe for chicken biryani",
+      "lang": "en-IN",
+      "must_refuse": true
+    },
+    {
+      "q": "How do I file my income tax return?",
+      "lang": "en-IN",
+      "must_refuse": true
+    },
+    {
+      "q": "मेरी bike की top speed kya hai?",
+      "lang": "hi-IN",
+      "must_refuse": true,
+      "note": "Top speed is not in the troubleshooting manual excerpts — bot should refuse rather than hallucinate a number."
+    },
+    {
+      "q": "Should I switch from Duke 250 to Royal Enfield?",
+      "lang": "en-IN",
+      "must_refuse": true
+    }
+  ]
+}

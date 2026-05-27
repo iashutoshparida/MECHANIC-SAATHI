@@ -1,0 +1,233 @@
+{
+  "name": "Mechanic Saathi — WhatsApp Voice Bot (Sarvam)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-mechanic-saathi",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "1",
+      "name": "WhatsApp Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [220, 300],
+      "webhookId": "mechanic-saathi-wa"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.body.entry[0].changes[0].value.messages[0].type }}",
+              "rightValue": "audio",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "2",
+      "name": "Is Audio Message?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.facebook.com/v19.0/{{ $json.body.entry[0].changes[0].value.messages[0].audio.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "whatsAppApi",
+        "options": {}
+      },
+      "id": "3",
+      "name": "Fetch WhatsApp Audio URL",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [660, 220]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "whatsAppApi",
+        "options": { "response": { "response": { "responseFormat": "file" } } }
+      },
+      "id": "4",
+      "name": "Download Audio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 220]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.sarvam.ai/speech-to-text",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "api-subscription-key", "value": "={{ $env.SARVAM_API_KEY }}" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            { "name": "model", "value": "saarika:v2.5" },
+            { "name": "language_code", "value": "unknown" },
+            { "parameterType": "formBinaryData", "name": "file", "inputDataFieldName": "data" }
+          ]
+        }
+      },
+      "id": "5",
+      "name": "Sarvam STT",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1100, 220]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1", "name": "user_text",
+              "value": "={{ $json.transcript || $('WhatsApp Webhook').item.json.body.entry[0].changes[0].value.messages[0].text.body }}",
+              "type": "string"
+            },
+            {
+              "id": "a2", "name": "user_lang",
+              "value": "={{ $json.language_code || 'en-IN' }}",
+              "type": "string"
+            },
+            {
+              "id": "a3", "name": "user_phone",
+              "value": "={{ $('WhatsApp Webhook').item.json.body.entry[0].changes[0].value.messages[0].from }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6",
+      "name": "Normalize Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1320, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.MECHANIC_SAATHI_API_URL }}/ask",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [{ "name": "Content-Type", "value": "application/json" }]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={\n  \"query\": \"{{ $json.user_text }}\",\n  \"lang\": \"{{ $json.user_lang }}\"\n}"
+      },
+      "id": "7",
+      "name": "Mechanic Saathi RAG",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1540, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.sarvam.ai/text-to-speech",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "api-subscription-key", "value": "={{ $env.SARVAM_API_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={\n  \"inputs\": [\"{{ $json.answer }}\"],\n  \"target_language_code\": \"{{ $json.lang }}\",\n  \"speaker\": \"anushka\",\n  \"model\": \"bulbul:v2\",\n  \"speech_sample_rate\": 22050,\n  \"enable_preprocessing\": true\n}"
+      },
+      "id": "8",
+      "name": "Sarvam TTS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1760, 300]
+    },
+    {
+      "parameters": {
+        "operation": "fromBase64",
+        "binaryPropertyName": "data",
+        "sourceProperty": "audios[0]",
+        "options": { "fileName": "reply.wav", "mimeType": "audio/wav" }
+      },
+      "id": "9",
+      "name": "Decode Audio",
+      "type": "n8n-nodes-base.moveBinaryData",
+      "typeVersion": 1,
+      "position": [1980, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.facebook.com/v19.0/{{ $env.WHATSAPP_PHONE_ID }}/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "whatsAppApi",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            { "name": "messaging_product", "value": "whatsapp" },
+            { "name": "to", "value": "={{ $('Normalize Input').item.json.user_phone }}" },
+            { "name": "type", "value": "audio" },
+            { "parameterType": "formBinaryData", "name": "audio", "inputDataFieldName": "data" }
+          ]
+        }
+      },
+      "id": "10",
+      "name": "Send WhatsApp Voice Reply",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2200, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.facebook.com/v19.0/{{ $env.WHATSAPP_PHONE_ID }}/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "whatsAppApi",
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"{{ $('Normalize Input').item.json.user_phone }}\",\n  \"type\": \"text\",\n  \"text\": { \"body\": \"{{ $('Mechanic Saathi RAG').item.json.answer }}\" }\n}"
+      },
+      "id": "11",
+      "name": "Send WhatsApp Text Reply",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2200, 460]
+    }
+  ],
+  "connections": {
+    "WhatsApp Webhook": { "main": [[{ "node": "Is Audio Message?", "type": "main", "index": 0 }]] },
+    "Is Audio Message?": {
+      "main": [
+        [{ "node": "Fetch WhatsApp Audio URL", "type": "main", "index": 0 }],
+        [{ "node": "Normalize Input", "type": "main", "index": 0 }]
+      ]
+    },
+    "Fetch WhatsApp Audio URL": { "main": [[{ "node": "Download Audio", "type": "main", "index": 0 }]] },
+    "Download Audio": { "main": [[{ "node": "Sarvam STT", "type": "main", "index": 0 }]] },
+    "Sarvam STT": { "main": [[{ "node": "Normalize Input", "type": "main", "index": 0 }]] },
+    "Normalize Input": { "main": [[{ "node": "Mechanic Saathi RAG", "type": "main", "index": 0 }]] },
+    "Mechanic Saathi RAG": { "main": [[{ "node": "Sarvam TTS", "type": "main", "index": 0 }, { "node": "Send WhatsApp Text Reply", "type": "main", "index": 0 }]] },
+    "Sarvam TTS": { "main": [[{ "node": "Decode Audio", "type": "main", "index": 0 }]] },
+    "Decode Audio": { "main": [[{ "node": "Send WhatsApp Voice Reply", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "staticData": null,
+  "meta": {
+    "description": "Receives a WhatsApp message (audio or text). If audio, transcribes with Sarvam STT (auto language detect). Sends the text to the Mechanic Saathi RAG backend, gets a grounded answer in the same language. Synthesizes the answer with Sarvam Bulbul TTS and replies on WhatsApp with both voice and text.",
+    "required_env": ["SARVAM_API_KEY", "MECHANIC_SAATHI_API_URL", "WHATSAPP_PHONE_ID"],
+    "required_credentials": ["whatsAppApi (Cloud API access token)"]
+  },
+  "tags": ["sarvam", "voice", "whatsapp", "rag", "bharat"]
+}
