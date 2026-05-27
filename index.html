@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mechanic Saathi — Your AI Bike Mechanic</title>
+  <meta name="description" content="Voice-first, multilingual, image-aware bike troubleshooting assistant grounded in owner's manuals. Powered by Sarvam AI.">
+  <meta property="og:title" content="Mechanic Saathi — Your AI Bike Mechanic">
+  <meta property="og:description" content="Ask in Hindi, Tamil, Telugu, Bengali or English. Get manual-grounded answers in seconds.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://github.com/iashutoshparida/MECHANIC-SAATHI">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ═══════════════════════════════════════════════════════════════
+       RESET & BASE
+       ═══════════════════════════════════════════════════════════════ */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: #08080a;
+      color: #e8e8ee;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       CSS VARIABLES
+       ═══════════════════════════════════════════════════════════════ */
+    :root {
+      --accent: #f97316;
+      --accent2: #fb923c;
+      --accent-glow: rgba(249, 115, 22, 0.25);
+      --bg: #08080a;
+      --bg2: #0e0e12;
+      --bg3: #141418;
+      --card: #18181c;
+      --card-hover: #1e1e24;
+      --border: #2a2a32;
+      --text: #e8e8ee;
+      --text-muted: #7c7c8a;
+      --green: #22c55e;
+      --red: #ef4444;
+      --radius: 16px;
+      --radius-sm: 10px;
+      --max-w: 1200px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       SCROLLBAR
+       ═══════════════════════════════════════════════════════════════ */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       ANIMATIONS
+       ═══════════════════════════════════════════════════════════════ */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-12px); }
+    }
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 20px var(--accent-glow); }
+      50% { box-shadow: 0 0 40px var(--accent-glow), 0 0 80px rgba(249,115,22,0.1); }
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-30px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    @keyframes spinSlow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .animate-on-scroll {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .animate-on-scroll.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       NAVIGATION
+       ═══════════════════════════════════════════════════════════════ */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 0 24px;
+      transition: all 0.4s ease;
+      background: rgba(8, 8, 10, 0.6);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid transparent;
+    }
+    nav.scrolled {
+      background: rgba(8, 8, 10, 0.92);
+      border-bottom-color: var(--border);
+    }
+    .nav-inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 72px;
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 22px;
+      letter-spacing: 1.5px;
+    }
+    .nav-logo .wrench { font-size: 24px; }
+    .nav-logo span {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      list-style: none;
+    }
+    .nav-links a {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-muted);
+      transition: color 0.3s;
+      position: relative;
+    }
+    .nav-links a:hover { color: var(--accent); }
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--accent);
+      transition: width 0.3s;
+      border-radius: 1px;
+    }
+    .nav-links a:hover::after { width: 100%; }
+    .nav-cta {
+      padding: 10px 24px;
+      background: var(--accent);
+      color: #fff !important;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.3s;
+      border: none;
+      cursor: pointer;
+    }
+    .nav-cta:hover {
+      background: var(--accent2);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px var(--accent-glow);
+    }
+    .nav-cta::after { display: none !important; }
+
+    .mobile-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text);
+      font-size: 24px;
+      cursor: pointer;
+      padding: 8px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       HERO SECTION
+       ═══════════════════════════════════════════════════════════════ */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      padding: 120px 24px 80px;
+    }
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+    .hero-bg img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.25;
+      filter: blur(2px);
+    }
+    .hero-bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        180deg,
+        rgba(8,8,10,0.3) 0%,
+        rgba(8,8,10,0.6) 40%,
+        rgba(8,8,10,0.95) 85%,
+        var(--bg) 100%
+      );
+    }
+    /* Animated gradient orbs */
+    .hero-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.4;
+      animation: float 8s ease-in-out infinite;
+    }
+    .hero-orb-1 {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(249,115,22,0.3), transparent);
+      top: -100px; right: -100px;
+      animation-delay: 0s;
+    }
+    .hero-orb-2 {
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(251,146,60,0.2), transparent);
+      bottom: -50px; left: -100px;
+      animation-delay: -4s;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      max-width: 860px;
+      animation: fadeInUp 1s ease-out;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 20px;
+      background: rgba(249, 115, 22, 0.1);
+      border: 1px solid rgba(249, 115, 22, 0.25);
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--accent2);
+      margin-bottom: 28px;
+      animation: fadeIn 1s ease-out 0.3s both;
+      letter-spacing: 0.5px;
+    }
+    .hero-badge .dot {
+      width: 6px; height: 6px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulseGlow 2s infinite;
+      box-shadow: 0 0 8px var(--green);
+    }
+    .hero h1 {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: clamp(48px, 8vw, 88px);
+      font-weight: 700;
+      line-height: 1.05;
+      letter-spacing: 2px;
+      margin-bottom: 24px;
+      animation: fadeInUp 1s ease-out 0.2s both;
+    }
+    .hero h1 .gradient-text {
+      background: linear-gradient(135deg, var(--accent), var(--accent2), #fbbf24);
+      background-size: 200% 200%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: gradientShift 4s ease infinite;
+    }
+    .hero-subtitle {
+      font-size: clamp(16px, 2.5vw, 20px);
+      color: var(--text-muted);
+      max-width: 640px;
+      margin: 0 auto 40px;
+      line-height: 1.7;
+      animation: fadeInUp 1s ease-out 0.4s both;
+      font-weight: 300;
+    }
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      animation: fadeInUp 1s ease-out 0.6s both;
+    }
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 36px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      border-radius: 14px;
+      font-weight: 600;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-decoration: none;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px var(--accent-glow);
+    }
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 36px;
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      border-radius: 14px;
+      font-weight: 500;
+      font-size: 16px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.3s;
+      text-decoration: none;
+    }
+    .btn-secondary:hover {
+      border-color: var(--accent);
+      background: rgba(249,115,22,0.06);
+      color: var(--accent);
+    }
+
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 48px;
+      margin-top: 56px;
+      animation: fadeInUp 1s ease-out 0.8s both;
+    }
+    .hero-stat {
+      text-align: center;
+    }
+    .hero-stat-value {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .hero-stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-top: 2px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       SECTION STYLES
+       ═══════════════════════════════════════════════════════════════ */
+    section {
+      padding: 100px 24px;
+      position: relative;
+    }
+    .section-inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+    }
+    .section-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 16px;
+    }
+    .section-label::before {
+      content: '';
+      width: 24px;
+      height: 2px;
+      background: var(--accent);
+      border-radius: 1px;
+    }
+    .section-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: clamp(32px, 5vw, 52px);
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      letter-spacing: 1px;
+    }
+    .section-desc {
+      font-size: 17px;
+      color: var(--text-muted);
+      max-width: 600px;
+      line-height: 1.7;
+      font-weight: 300;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       PROBLEM SECTION
+       ═══════════════════════════════════════════════════════════════ */
+    #problem {
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .problem-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+      margin-top: 56px;
+    }
+    .problem-visual {
+      position: relative;
+    }
+    .problem-quote {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 32px;
+      position: relative;
+    }
+    .problem-quote p {
+      font-size: 18px;
+      font-style: italic;
+      color: var(--text);
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+    .problem-quote .attribution {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .problem-items {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .problem-item {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .problem-icon {
+      width: 48px;
+      height: 48px;
+      min-width: 48px;
+      background: rgba(249,115,22,0.08);
+      border: 1px solid rgba(249,115,22,0.15);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+    .problem-item h3 {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+    .problem-item p {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       FEATURES
+       ═══════════════════════════════════════════════════════════════ */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 56px;
+    }
+    .feature-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0;
+      overflow: hidden;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+    }
+    .feature-card:hover {
+      border-color: rgba(249,115,22,0.3);
+      transform: translateY(-6px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 40px var(--accent-glow);
+    }
+    .feature-card-img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-bottom: 1px solid var(--border);
+    }
+    .feature-card-body {
+      padding: 28px;
+    }
+    .feature-card-icon {
+      width: 52px;
+      height: 52px;
+      background: linear-gradient(135deg, rgba(249,115,22,0.12), rgba(251,146,60,0.06));
+      border: 1px solid rgba(249,115,22,0.2);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+    .feature-card h3 {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      letter-spacing: 0.5px;
+    }
+    .feature-card p {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       ARCHITECTURE / HOW IT WORKS
+       ═══════════════════════════════════════════════════════════════ */
+    #architecture {
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .arch-flow {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      margin-top: 56px;
+      position: relative;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .arch-step {
+      flex: 1;
+      min-width: 180px;
+      max-width: 220px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 20px;
+      text-align: center;
+      position: relative;
+      transition: all 0.3s;
+    }
+    .arch-step:hover {
+      border-color: var(--accent);
+      transform: translateY(-4px);
+    }
+    .arch-step-num {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      margin: 0 auto 16px;
+    }
+    .arch-step-icon {
+      font-size: 32px;
+      margin-bottom: 12px;
+    }
+    .arch-step h4 {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: 0.5px;
+    }
+    .arch-step p {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .arch-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      color: var(--accent);
+      font-size: 20px;
+      opacity: 0.6;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       DEMO / SCREENSHOT
+       ═══════════════════════════════════════════════════════════════ */
+    .demo-container {
+      margin-top: 56px;
+      position: relative;
+    }
+    .demo-frame {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.4), 0 0 60px var(--accent-glow);
+      animation: pulseGlow 4s ease-in-out infinite;
+    }
+    .demo-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 20px;
+      background: var(--bg3);
+      border-bottom: 1px solid var(--border);
+    }
+    .demo-dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+    }
+    .demo-dot-red { background: #ef4444; }
+    .demo-dot-yellow { background: #eab308; }
+    .demo-dot-green { background: #22c55e; }
+    .demo-toolbar-title {
+      flex: 1;
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .demo-frame img {
+      width: 100%;
+      display: block;
+    }
+
+    /* Gallery grid for deployment screenshots */
+    .demo-gallery {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 32px;
+    }
+    .demo-gallery-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+    .demo-gallery-item:hover {
+      border-color: var(--accent);
+      transform: scale(1.02);
+    }
+    .demo-gallery-item img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      object-position: top;
+    }
+    .demo-gallery-label {
+      padding: 12px 16px;
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       TECH STACK
+       ═══════════════════════════════════════════════════════════════ */
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-top: 56px;
+    }
+    .tech-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      transition: all 0.3s;
+    }
+    .tech-card:hover {
+      border-color: rgba(249,115,22,0.3);
+      background: var(--card-hover);
+    }
+    .tech-card-icon {
+      width: 44px;
+      height: 44px;
+      min-width: 44px;
+      background: rgba(249,115,22,0.08);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    .tech-card h4 {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .tech-card p {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .tech-card .tag {
+      display: inline-block;
+      padding: 2px 10px;
+      background: rgba(249,115,22,0.1);
+      border: 1px solid rgba(249,115,22,0.2);
+      border-radius: 20px;
+      font-size: 11px;
+      color: var(--accent2);
+      font-weight: 500;
+      margin-top: 8px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       BIKES INDEXED
+       ═══════════════════════════════════════════════════════════════ */
+    .bikes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin-top: 56px;
+    }
+    .bike-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s;
+    }
+    .bike-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-4px);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+    }
+    .bike-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+    }
+    .bike-emoji {
+      font-size: 56px;
+      margin-bottom: 20px;
+      animation: float 6s ease-in-out infinite;
+    }
+    .bike-card h3 {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .bike-card .chunks {
+      font-size: 13px;
+      color: var(--accent2);
+      font-weight: 500;
+    }
+    .bike-card .desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 12px;
+      line-height: 1.5;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       CTA / FOOTER
+       ═══════════════════════════════════════════════════════════════ */
+    .cta-section {
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(249,115,22,0.08), transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .cta-section .section-inner {
+      position: relative;
+      z-index: 2;
+    }
+    .cta-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 40px;
+      flex-wrap: wrap;
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 24px;
+      text-align: center;
+      background: var(--bg);
+    }
+    .footer-inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+    }
+    .footer-logo {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+    .footer-logo span {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .footer-credits {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-top: 16px;
+    }
+    .footer-links a {
+      font-size: 13px;
+      color: var(--text-muted);
+      transition: color 0.3s;
+    }
+    .footer-links a:hover { color: var(--accent); }
+
+    /* ═══════════════════════════════════════════════════════════════
+       SARVAM BADGE
+       ═══════════════════════════════════════════════════════════════ */
+    .powered-by {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 24px;
+    }
+    .powered-by strong {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       RESPONSIVE
+       ═══════════════════════════════════════════════════════════════ */
+    @media (max-width: 900px) {
+      .features-grid { grid-template-columns: 1fr; }
+      .problem-grid { grid-template-columns: 1fr; gap: 40px; }
+      .demo-gallery { grid-template-columns: 1fr 1fr; }
+      .hero-stats { gap: 32px; }
+      .arch-flow { flex-direction: column; align-items: center; }
+      .arch-arrow { transform: rotate(90deg); width: auto; height: 30px; }
+      .arch-step { max-width: 100%; width: 100%; }
+    }
+    @media (max-width: 680px) {
+      .nav-links { display: none; }
+      .mobile-toggle { display: block; }
+      .nav-links.open {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: 72px;
+        left: 0;
+        right: 0;
+        background: rgba(8,8,10,0.98);
+        backdrop-filter: blur(20px);
+        padding: 24px;
+        border-bottom: 1px solid var(--border);
+        gap: 20px;
+      }
+      .hero-stats { flex-wrap: wrap; gap: 24px; }
+      .hero-stat { min-width: 80px; }
+      .demo-gallery { grid-template-columns: 1fr; }
+      .tech-grid { grid-template-columns: 1fr; }
+      section { padding: 72px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════ NAVIGATION ═══════════════════ -->
+  <nav id="navbar">
+    <div class="nav-inner">
+      <div class="nav-logo">
+        <span class="wrench">🔧</span>
+        <span>MECHANIC SAATHI</span>
+      </div>
+      <button class="mobile-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Toggle menu">☰</button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#problem" onclick="closeMenu()">Problem</a></li>
+        <li><a href="#features" onclick="closeMenu()">Features</a></li>
+        <li><a href="#architecture" onclick="closeMenu()">How It Works</a></li>
+        <li><a href="#demo" onclick="closeMenu()">Demo</a></li>
+        <li><a href="#tech" onclick="closeMenu()">Tech Stack</a></li>
+        <li><a href="https://github.com/iashutoshparida/MECHANIC-SAATHI" target="_blank" class="nav-cta">⭐ GitHub</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════ HERO ═══════════════════ -->
+  <section class="hero" id="hero">
+    <div class="hero-bg">
+      <img src="images/hero_bg.png" alt="Rider on road" loading="eager">
+    </div>
+    <div class="hero-orb hero-orb-1"></div>
+    <div class="hero-orb hero-orb-2"></div>
+
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="dot"></span>
+        Powered by Sarvam AI
+      </div>
+      <h1>
+        YOUR <span class="gradient-text">AI MECHANIC</span><br>
+        ON EVERY ROAD
+      </h1>
+      <p class="hero-subtitle">
+        Voice-first, multilingual, image-aware bike troubleshooting assistant — grounded strictly in owner's manuals. Ask in Hindi, Tamil, Telugu, Bengali, or English.
+      </p>
+      <div class="hero-actions">
+        <a href="https://github.com/iashutoshparida/MECHANIC-SAATHI" target="_blank" class="btn-primary">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          View on GitHub
+        </a>
+        <a href="https://d6b1cc52-7067-451a-9894-f43f477d70ce-00-1eempn33p5915.pike.replit.dev:5000/" target="_blank" class="btn-secondary">
+  See It Live ↗
+      </a>
+      </div>
+
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="hero-stat-value">504</div>
+          <div class="hero-stat-label">Manual Chunks</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-value">5+</div>
+          <div class="hero-stat-label">Languages</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-value">~4s</div>
+          <div class="hero-stat-label">Response Time</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-value">0</div>
+          <div class="hero-stat-label">Hallucinations</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ THE PROBLEM ═══════════════════ -->
+  <section id="problem">
+    <div class="section-inner">
+      <div class="animate-on-scroll">
+        <div class="section-label">The Problem</div>
+        <h2 class="section-title">Bharat Doesn't Lack Riders.<br>It Lacks 24×7 Mechanic Uncles.</h2>
+        <p class="section-desc">The rider on a Ballia service road at 9:47 PM with white smoke pouring from their exhaust, who doesn't speak fluent English, can't read a 200-page PDF.</p>
+      </div>
+
+      <div class="problem-grid">
+        <div class="problem-visual animate-on-scroll">
+          <div class="problem-quote">
+            <p>"yeh kya ho raha hai bhai?"</p>
+            <p style="font-size:15px; color: var(--text-muted);">They photograph the smoke, hit the mic button — and get an answer in Hindi in 4 seconds, grounded in the actual manual, with the option to listen to the reply being read out.</p>
+            <div class="attribution">— The Mechanic Saathi vision</div>
+          </div>
+        </div>
+        <div class="problem-items animate-on-scroll">
+          <div class="problem-item">
+            <div class="problem-icon">📖</div>
+            <div>
+              <h3>200-Page PDF Manuals</h3>
+              <p>No one reads the full owner's manual — especially not when stranded on the road at night with a malfunctioning bike.</p>
+            </div>
+          </div>
+          <div class="problem-item">
+            <div class="problem-icon">🌐</div>
+            <div>
+              <h3>Language Barrier</h3>
+              <p>Most manuals are in English. Most riders speak Hindi, Marathi, Tamil, Telugu, or Bengali. The gap is massive.</p>
+            </div>
+          </div>
+          <div class="problem-item">
+            <div class="problem-icon">🕐</div>
+            <div>
+              <h3>No Mechanic at Night</h3>
+              <p>Nearest mechanic is closed. YouTube videos buffer on 2G. Forums give conflicting advice. The rider is alone.</p>
+            </div>
+          </div>
+          <div class="problem-item">
+            <div class="problem-icon">🤖</div>
+            <div>
+              <h3>AI Hallucinations Kill Trust</h3>
+              <p>Generic chatbots guess answers. A wrong repair instruction can damage an engine or risk safety. Trust requires citations.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ FEATURES ═══════════════════ -->
+  <section id="features">
+    <div class="section-inner">
+      <div class="animate-on-scroll" style="text-align:center;">
+        <div class="section-label" style="justify-content:center;">Core Features</div>
+        <h2 class="section-title" style="text-align:center;">Three Pillars of<br><span style="background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Mechanic Saathi</span></h2>
+        <p class="section-desc" style="margin:0 auto;">Every answer is grounded, every interaction is multilingual, every input mode just works.</p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card animate-on-scroll">
+          <img src="images/feature_manual.png" alt="Manual grounding" class="feature-card-img" loading="lazy">
+          <div class="feature-card-body">
+            <div class="feature-card-icon">📖</div>
+            <h3>Strictly Grounded</h3>
+            <p>Every answer cites a chunk ID from the manual. If retrieval scores below threshold, the bot refuses — <em>"yeh manual mein nahi mila"</em> — instead of hallucinating. Zero tolerance for made-up answers.</p>
+          </div>
+        </div>
+        <div class="feature-card animate-on-scroll" style="animation-delay: 0.1s">
+          <img src="images/feature_voice.png" alt="Voice stack" class="feature-card-img" loading="lazy">
+          <div class="feature-card-body">
+            <div class="feature-card-icon">🎤</div>
+            <h3>Fully Sarvam Voice Stack</h3>
+            <p>Sarvam STT (Saarika) detects language, Sarvam-m generates answers natively, Bulbul speaks the reply back, Mayura translates on demand. Complete Indic voice AI.</p>
+          </div>
+        </div>
+        <div class="feature-card animate-on-scroll" style="animation-delay: 0.2s">
+          <img src="images/feature_multilingual.png" alt="Multilingual" class="feature-card-img" loading="lazy">
+          <div class="feature-card-body">
+            <div class="feature-card-icon">🌍</div>
+            <h3>Multimodal Input Bar</h3>
+            <p>Mic, image, and text input live in a single bar. The image flows through a vision model into an English symptom description that joins the question before retrieval.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ HOW IT WORKS ═══════════════════ -->
+  <section id="architecture">
+    <div class="section-inner">
+      <div class="animate-on-scroll" style="text-align:center;">
+        <div class="section-label" style="justify-content:center;">Architecture</div>
+        <h2 class="section-title" style="text-align:center;">How It Works</h2>
+        <p class="section-desc" style="margin:0 auto;">From voice or photo to cited answer in under 4 seconds.</p>
+      </div>
+
+      <div class="arch-flow animate-on-scroll">
+        <div class="arch-step">
+          <div class="arch-step-num">1</div>
+          <div class="arch-step-icon">🎤📷✍️</div>
+          <h4>User Input</h4>
+          <p>Voice, photo, or text — all from one unified input bar</p>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-step">
+          <div class="arch-step-num">2</div>
+          <div class="arch-step-icon">🗣️</div>
+          <h4>Sarvam STT</h4>
+          <p>Saarika v2.5 auto-detects language and transcribes</p>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-step">
+          <div class="arch-step-num">3</div>
+          <div class="arch-step-icon">🔍</div>
+          <h4>RAG Retrieval</h4>
+          <p>Top-3 chunks from TF-IDF index (cosine ≥ 0.30)</p>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-step">
+          <div class="arch-step-num">4</div>
+          <div class="arch-step-icon">🧠</div>
+          <h4>Sarvam-m Chat</h4>
+          <p>Answers in user's language with cited chunk IDs</p>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-step">
+          <div class="arch-step-num">5</div>
+          <div class="arch-step-icon">🔊</div>
+          <h4>TTS + Translate</h4>
+          <p>Bulbul speaks it back; Mayura translates on demand</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ DEMO ═══════════════════ -->
+  <section id="demo">
+    <div class="section-inner">
+      <div class="animate-on-scroll" style="text-align:center;">
+        <div class="section-label" style="justify-content:center;">Live Demo</div>
+        <h2 class="section-title" style="text-align:center;">See It In Action</h2>
+        <p class="section-desc" style="margin:0 auto;">The pro garage UI — dark theme, unified input bar, live translation pills.</p>
+      </div>
+
+      <div class="demo-container animate-on-scroll">
+        <div class="demo-frame">
+          <div class="demo-toolbar">
+            <div class="demo-dot demo-dot-red"></div>
+            <div class="demo-dot demo-dot-yellow"></div>
+            <div class="demo-dot demo-dot-green"></div>
+            <div class="demo-toolbar-title">mechanic-saathi.streamlit.app</div>
+            <div style="width:52px;"></div>
+          </div>
+          <img src="mechanic_saathi/ui.png" alt="Mechanic Saathi UI screenshot" loading="lazy">
+        </div>
+      </div>
+
+      <div class="demo-gallery animate-on-scroll">
+        <div class="demo-gallery-item">
+          <img src="mechanic_saathi/DEPLOYMENT SS1.png" alt="Deployment screenshot 1" loading="lazy">
+          <div class="demo-gallery-label">Chat Interface</div>
+        </div>
+        <div class="demo-gallery-item">
+          <img src="mechanic_saathi/DEPLOYMENT SS2.png" alt="Deployment screenshot 2" loading="lazy">
+          <div class="demo-gallery-label">Voice & Translation</div>
+        </div>
+        <div class="demo-gallery-item">
+          <img src="mechanic_saathi/DEPLOYMENT SS3.png" alt="Deployment screenshot 3" loading="lazy">
+          <div class="demo-gallery-label">Manual Grounding</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ TECH STACK ═══════════════════ -->
+  <section id="tech">
+    <div class="section-inner">
+      <div class="animate-on-scroll">
+        <div class="section-label">Tech Stack</div>
+        <h2 class="section-title">Built With</h2>
+        <p class="section-desc">A full-stack Sarvam AI integration with robust RAG pipeline.</p>
+      </div>
+
+      <div class="tech-grid">
+        <div class="tech-card animate-on-scroll">
+          <div class="tech-card-icon">🧠</div>
+          <div>
+            <h4>Sarvam-m (LLM)</h4>
+            <p>Native multilingual chat generation — answers in the user's detected language</p>
+            <span class="tag">sarvam-m</span>
+          </div>
+        </div>
+        <div class="tech-card animate-on-scroll">
+          <div class="tech-card-icon">🗣️</div>
+          <div>
+            <h4>Sarvam Saarika (STT)</h4>
+            <p>v2.5 speech-to-text with automatic language detection for Hindi, English, Hinglish, Tamil, Telugu</p>
+            <span class="tag">saarika:v2.5</span>
+          </div>
+        </div>
+        <div class="tech-card animate-on-scroll">
+          <div class="tech-card-icon">🔊</div>
+          <div>
+            <h4>Sarvam Bulbul (TTS)</h4>
+            <p>Text-to-speech that reads answers aloud in the detected language</p>
+            <span class="tag">bulbul:v2</span>
+          </div>
+        </div>
+        <div class="tech-card animate-on-scroll">
+          <div class="tech-card-icon">🌐</div>
+          <div>
+            <h4>Mayura (Translation)</h4>
+            <p>On-demand translation between Hindi, Tamil, Telugu, Bengali, and English</p>
+            <span class="tag">mayura:v1</span>
+          </div>
+        </div>
+        <div class="tech-card animate-on-scroll">
+          <div class="tech-card-icon">📄</div>
+          <div>
+            <h4>PyPDF + TF-IDF</h4>
+            <p>PDF → 600-char overlapping chunks → TF-IDF vectorstore for retrieval</p>
+            <span class="tag">pypdf + sklearn</span>
+          </div>
+        </div>
+        <div class="tech-card animate-on-scroll">
+          <div class="tech-card-icon">🎨</div>
+          <div>
+            <h4>Streamlit</h4>
+            <p>Pro garage-themed UI with dark mode, glassmorphism, and unified input bar</p>
+            <span class="tag">streamlit</span>
+          </div>
+        </div>
+        <div class="tech-card animate-on-scroll">
+          <div class="tech-card-icon">📷</div>
+          <div>
+            <h4>Vision Model</h4>
+            <p>OpenAI vision for photo → English symptom description before retrieval</p>
+            <span class="tag">gpt-4-vision</span>
+          </div>
+        </div>
+        <div class="tech-card animate-on-scroll">
+          <div class="tech-card-icon">🛡️</div>
+          <div>
+            <h4>Citation Guardrail</h4>
+            <p>If no chunk ID in answer → refuses to respond. Zero hallucination policy</p>
+            <span class="tag">guardrail</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ BIKES ═══════════════════ -->
+  <section id="bikes" style="background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+    <div class="section-inner">
+      <div class="animate-on-scroll" style="text-align:center;">
+        <div class="section-label" style="justify-content:center;">Manuals Indexed</div>
+        <h2 class="section-title" style="text-align:center;">Bikes We Support</h2>
+        <p class="section-desc" style="margin:0 auto;">Upload any bike's PDF manual to add it. Currently indexed:</p>
+      </div>
+
+      <div class="bikes-grid">
+        <div class="bike-card animate-on-scroll">
+          <div class="bike-emoji">🛵</div>
+          <h3>Honda Activa 6G</h3>
+          <div class="chunks">~250 chunks indexed</div>
+          <div class="desc">India's bestselling scooter. Complete owner's manual coverage for troubleshooting, maintenance schedules, and specifications.</div>
+        </div>
+        <div class="bike-card animate-on-scroll">
+          <div class="bike-emoji">🏍️</div>
+          <h3>Royal Enfield Classic 350</h3>
+          <div class="chunks">~254 chunks indexed</div>
+          <div class="desc">The iconic cruiser. Full manual indexed covering engine care, electrical systems, and common troubleshooting scenarios.</div>
+        </div>
+        <div class="bike-card animate-on-scroll">
+          <div class="bike-emoji">➕</div>
+          <h3>Add Your Bike</h3>
+          <div class="chunks">Upload any PDF manual</div>
+          <div class="desc">Just upload the owner's manual PDF through the sidebar. The system auto-indexes it into searchable chunks instantly.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ CTA ═══════════════════ -->
+  <section class="cta-section">
+    <div class="section-inner animate-on-scroll" style="text-align:center;">
+      <div class="section-label" style="justify-content:center;">Open Source</div>
+      <h2 class="section-title">
+        Ready to <span style="background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Try It?</span>
+      </h2>
+      <p class="section-desc" style="margin:0 auto;">
+        Mechanic Saathi is open source. Clone the repo, add your Sarvam API key, and start helping riders.
+      </p>
+
+      <div class="cta-buttons">
+        <a href="https://github.com/iashutoshparida/MECHANIC-SAATHI" target="_blank" class="btn-primary">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          Clone Repository
+        </a>
+        <a href="https://dashboard.sarvam.ai" target="_blank" class="btn-secondary">
+          🔑 Get Sarvam API Key
+        </a>
+      </div>
+
+      <div class="powered-by">
+        ⚡ Powered by <strong>Sarvam AI</strong> · STT + TTS + LLM + Translation
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ FOOTER ═══════════════════ -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-logo">🔧 <span>MECHANIC SAATHI</span></div>
+      <div class="footer-credits">
+        Built by <strong style="color:var(--text);">Ashutosh Parida</strong> · Submitted for Sarvam AI Hackathon
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/iashutoshparida/MECHANIC-SAATHI" target="_blank">GitHub</a>
+        <a href="https://dashboard.sarvam.ai" target="_blank">Sarvam AI</a>
+        <a href="#hero">Back to Top ↑</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ═══════════════════ SCRIPTS ═══════════════════ -->
+  <script>
+    // Navbar scroll effect
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      navbar.classList.toggle('scrolled', window.scrollY > 40);
+    });
+
+    // Close mobile menu
+    function closeMenu() {
+      document.querySelector('.nav-links').classList.remove('open');
+    }
+
+    // Scroll-triggered animations
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+    document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
+
+    // Counter animation for stats
+    function animateCounters() {
+      document.querySelectorAll('.hero-stat-value').forEach(el => {
+        const target = el.textContent;
+        if (target.includes('+') || target.includes('~') || target.includes('s')) {
+          // Skip complex values, they are already set
+          return;
+        }
+        const num = parseInt(target);
+        if (isNaN(num) || num === 0) return;
+        let current = 0;
+        const step = Math.ceil(num / 40);
+        const interval = setInterval(() => {
+          current += step;
+          if (current >= num) {
+            el.textContent = target;
+            clearInterval(interval);
+          } else {
+            el.textContent = current;
+          }
+        }, 30);
+      });
+    }
+    // Run counter animation when hero is visible
+    const heroObserver = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        animateCounters();
+        heroObserver.disconnect();
+      }
+    }, { threshold: 0.3 });
+    heroObserver.observe(document.querySelector('.hero'));
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+  </script>
+</body>
+</html>
