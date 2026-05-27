@@ -1,0 +1,7 @@
+streamlit>=1.39
+python-dotenv>=1.0
+requests>=2.31
+numpy>=1.26
+sentence-transformers>=3.0
+torch>=2.2
+Pillow>=10.0
